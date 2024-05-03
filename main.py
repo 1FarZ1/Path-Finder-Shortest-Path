@@ -9,7 +9,6 @@ geolocator = Nominatim(user_agent="my_geocoder")
 graph = None
 figure = None
 data = {
-    "index": [],
     "id": [],
     "lat": [],
     "lon": [],
@@ -17,10 +16,16 @@ data = {
 }
 df: pd.DataFrame = None
 
+def is_data_exists():
+    if os.path.exists("el_achour_nodes.csv"):
+        return True
+    else:
+        return False
+
 
 def get_last_item_node_id():
     if os.path.exists("el_achour_nodes.csv"):
-        return pd.read_csv("el_achour_nodes.csv")['id'].values[-1]
+        return pd.read_csv("el_achour_nodes.csv").index.values[-1]
     else:
         return 0
 
@@ -36,7 +41,7 @@ def fill_df():
     global df
     if os.path.exists("el_achour_nodes.csv"):
         print('fill_df: File exists')
-        df = pd.read_csv("el_achour_nodes.csv")
+        df = pd.read_csv("el_achour_nodes.csv",index_col=0)
     else:
         print('fill_df: File not exists')
         df = pd.DataFrame(data)
@@ -49,29 +54,26 @@ def get_place_name(lat, lon):
     location = geolocator.reverse((lat, lon))
     return location.address.split(',')[0]
 
-
 def df_construct(g):
-    global df
-
+    last_node_id = df['id'].max() 
     i = need_skip_in_df()
-
-    enter = True
+    print(f"Last Node ID: {last_node_id}")
     for node in g.nodes(data=True):
         lat = node[1]['y']
         lon = node[1]['x']
-
-        # if node[0] == 351100002:
-        #     enter = True
         
-        if enter:
-            place_name: str = get_place_name(lat, lon)
-            print(f"Node: {node[0]} - Place Name: {place_name}")
-            if not place_name.isdigit() and not place_name.startswith(('CW', 'RN', 'RU')):
-                if place_name not in df['name'].values:
-                  df.loc[i] = [i, node[0], lat, lon, place_name]
-                  i += 1
-            create_csv(df)
+        if node[0] <= last_node_id:
+            continue
+        
+        print('can Access')
+        place_name = get_place_name(lat, lon)
+        print(f"Node: {node[0]} - Place Name: {place_name}")
+        if not place_name.isdigit() and not place_name.startswith(('CW', 'RN', 'RU')):
+            if place_name not in df['name'].values:
+                df.loc[i] = [node[0], lat, lon, place_name]
+                i += 1
 
+            create_csv(df)
 
 def get_map_data():
     place_name = 'El Achour, Draria District, Algiers, Algeria'
@@ -93,10 +95,10 @@ def main():
     global graph
     graph = get_map_data()
         
-    df_construct(graph)
+    # df_construct(graph)
 
     st.title("Easy Path Finder")
-    col1, col2= st.columns(2)
+    col1, col2= st.columns(2,gap='large')
 
     global figure
     st.session_state.canShow = False
@@ -104,44 +106,43 @@ def main():
         source = st.selectbox("Source", options=df["name"].values)
         destination = st.selectbox("Destination", options=df["name"].values)
 
-    color_list = []
-    size_list = []
+        color_list = []
+        size_list = []
 
-    for item in df['name'].values:
-        if item == source or item == destination:
-            color_list.append('#008000')
-            size_list.append(50)
-        else:
-            color_list.append('#FF0000')
-            size_list.append(1)
+        for item in df['name'].values:
+            if item == source or item == destination:
+                color_list.append('#008000')
+                size_list.append(50)
+            else:
+                color_list.append('#FF0000')
+                size_list.append(1)
 
-    df['color'] = color_list
-    df['size'] = size_list
+        df['color'] = color_list
+        df['size'] = size_list
 
-    if st.button('Get Shortest Path'):
-        if source != destination:
-            src = df[df['name'] == source]['id'].values[0]
-            dest = df[df['name'] == destination]['id'].values[0]
-            shortest_path = a_star_search(graph, src, dest)
+        if st.button('Get Shortest Path'):
+            if source != destination:
+                src = df[df['name'] == source]['id'].values[0]
+                dest = df[df['name'] == destination]['id'].values[0]
+                shortest_path = a_star_search(graph, src, dest)
 
-            fig, ax = ox.plot_graph_route(
-                graph,
-                shortest_path,
-                route_color='r',
-                route_linewidth=3,
-                node_size=0,
-                figsize=(15, 15),
-                show=False,
-                close=False
-            )
-            figure = fig
-            st.session_state.canShow = True
-
-            ##column 2
+                fig, ax = ox.plot_graph_route(
+                    graph,
+                    shortest_path,
+                    route_color='r',
+                    route_linewidth=3,
+                    node_size=0,
+                    figsize=(15, 15),
+                    show=False,
+                    close=False
+                )
+                figure = fig
+                st.session_state.canShow = True
+        #     ##column 2
         with col2:
             if not st.session_state.canShow:
-                map_data = pd.DataFrame(df, columns=['lat', 'lon', 'color', 'size'])
-                st.map(map_data, color='color', size='size')
+                    map_data = pd.DataFrame(df, columns=['lat', 'lon', 'color', 'size'])
+                    st.map(map_data, color='color', size='size')
             else:
                 st.pyplot(fig=figure)
 
