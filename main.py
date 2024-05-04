@@ -17,37 +17,37 @@ data = {
 df: pd.DataFrame = None
 
 def is_data_exists():
-    if os.path.exists("el_achour_nodes.csv"):
+    if os.path.exists("data/el_achour_nodes.csv"):
         return True
     else:
         return False
 
 
 def get_last_item_node_id():
-    if os.path.exists("el_achour_nodes.csv"):
-        return pd.read_csv("el_achour_nodes.csv").index.values[-1]
+    if os.path.exists("data/el_achour_nodes.csv"):
+        return pd.read_csv("data/el_achour_nodes.csv").index.values[-1]
     else:
         return 0
 
 def need_skip_in_df():
-    if os.path.exists("el_achour_nodes.csv"):
-        print("File exists" + str(len(pd.read_csv("el_achour_nodes.csv"))))
-        return len(pd.read_csv("el_achour_nodes.csv"))
+    if os.path.exists("data/el_achour_nodes.csv"):
+        print("File exists" + str(len(pd.read_csv("data/el_achour_nodes.csv"))))
+        return len(pd.read_csv("data/el_achour_nodes.csv"))
     else:
         print("File not exists")
         return 0
 
 def fill_df():
     global df
-    if os.path.exists("el_achour_nodes.csv"):
+    if os.path.exists("data/el_achour_nodes.csv"):
         print('fill_df: File exists')
-        df = pd.read_csv("el_achour_nodes.csv",index_col=0)
+        df = pd.read_csv("data/el_achour_nodes.csv",index_col=0)
     else:
         print('fill_df: File not exists')
         df = pd.DataFrame(data)
 
 def create_csv(data_frame: pd.DataFrame):
-    data_frame.to_csv("el_achour_nodes.csv")
+    data_frame.to_csv("data/el_achour_nodes.csv")
 
 
 def get_place_name(lat, lon):
@@ -138,7 +138,6 @@ def main():
                 )
                 figure = fig
                 st.session_state.canShow = True
-        #     ##column 2
         with col2:
             if not st.session_state.canShow:
                     map_data = pd.DataFrame(df, columns=['lat', 'lon', 'color', 'size'])
