@@ -6,8 +6,7 @@ import streamlit as st
 import os
 
 geolocator = Nominatim(user_agent="my_geocoder")
-graph = None
-figure = None
+
 data = {
     "id": [],
     "lat": [],
@@ -31,19 +30,15 @@ def get_last_item_node_id():
 
 def need_skip_in_df():
     if os.path.exists("data/el_achour_nodes.csv"):
-        print("File exists" + str(len(pd.read_csv("data/el_achour_nodes.csv"))))
         return len(pd.read_csv("data/el_achour_nodes.csv"))
     else:
-        print("File not exists")
         return 0
 
 def fill_df():
     global df
     if os.path.exists("data/el_achour_nodes.csv"):
-        print('fill_df: File exists')
         df = pd.read_csv("data/el_achour_nodes.csv",index_col=0)
     else:
-        print('fill_df: File not exists')
         df = pd.DataFrame(data)
 
 def create_csv(data_frame: pd.DataFrame):
@@ -77,12 +72,11 @@ def df_construct(g):
 
 def get_map_data():
     place_name = 'El Achour, Draria District, Algiers, Algeria'
-    global graph
-    graph = ox.graph_from_place(
+    g = ox.graph_from_place(
         place_name,
         network_type='drive',
     )
-    return graph
+    return g
 
 
 def a_star_search(g, source, target):
@@ -92,7 +86,7 @@ def a_star_search(g, source, target):
 
 def main():
     fill_df()
-    global graph
+    graph = None
     graph = get_map_data()
         
     # df_construct(graph)
@@ -100,25 +94,18 @@ def main():
     st.title("Easy Path Finder")
     col1, col2= st.columns(2,gap='large')
 
-    global figure
+    figure = None
     st.session_state.canShow = False
     with col1:
         source = st.selectbox("Source", options=df["name"].values)
         destination = st.selectbox("Destination", options=df["name"].values)
 
-        color_list = []
-        size_list = []
-
-        for item in df['name'].values:
-            if item == source or item == destination:
-                color_list.append('#008000')
-                size_list.append(50)
-            else:
-                color_list.append('#FF0000')
-                size_list.append(1)
+        color_list = ['#008000' if item == source or item == destination else '#FF0000' for item in df['name'].values]
+        size_list = [50 if item == source or item == destination else 1 for item in df['name'].values]
 
         df['color'] = color_list
         df['size'] = size_list
+
 
         if st.button('Get Shortest Path'):
             if source != destination:
