@@ -60,7 +60,6 @@ def df_construct(g):
         if node[0] <= last_node_id:
             continue
         
-        print('can Access')
         place_name = get_place_name(lat, lon)
         print(f"Node: {node[0]} - Place Name: {place_name}")
         if not place_name.isdigit() and not place_name.startswith(('CW', 'RN', 'RU')):
@@ -70,8 +69,8 @@ def df_construct(g):
 
             create_csv(df)
 
-def get_map_data():
-    place_name = 'El Achour, Draria District, Algiers, Algeria'
+def get_map_data(name):
+    place_name = name + ', Draria District, Algiers, Algeria'
     g = ox.graph_from_place(
         place_name,
         network_type='drive',
@@ -87,8 +86,9 @@ def a_star_search(g, source, target):
 def main():
     fill_df()
     graph = None
-    graph = get_map_data()
-        
+    graph = get_map_data('El Achour')
+    
+    ## ONLY FOR FIRST TIME
     # df_construct(graph)
 
     st.title("Easy Path Finder")
