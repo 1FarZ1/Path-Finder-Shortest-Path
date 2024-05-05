@@ -1,6 +1,10 @@
 # Easy-Path-Finder [A Star Algorithem]
 
-## Easy-Path-finder is A Web App built using Streamlit and A* Algorithem to find the shortest path between two points in a City , Currently it is only available for the city of el Achour, Algeries
+## Easy-Path-finder is A Web App built using Streamlit and A* Algorithem to find the shortest path between two points in a City
+
+# Custom City
+
+## Change the City and make a new Csv for Other Cities [Currently El Achour]
 
 ## How to Use
 
